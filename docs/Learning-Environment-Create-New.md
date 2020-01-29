@@ -343,11 +343,15 @@ with our Agent code.
 
 1. Select the **RollerAgent** GameObject to show its properties in the Inspector
     window.
-2. Change **Decision Interval** from `1` to `10`.
-3. Drag the Target GameObject from the Hierarchy window to the RollerAgent
+2. If it is not attached, add a `Behavior Parameters` component to the Agent. This component
+dictates what behavior the Agent will use.
+3. Since we want our Agent to update its action at regular intervals, we must also add a
+`Decision Requester` component to the Agent.
+3. Change **Decision Interval**  in the `Decision Requester` from `1` to `10`.
+4. Drag the Target GameObject from the Hierarchy window to the RollerAgent
     Target field.
-4. Add the Behavior Parameters script with the Add Component button from the RollerAgent Inspector.
-5. Modify the Behavior Parameters of the Agent :
+5. Add the Behavior Parameters script with the Add Component button from the RollerAgent Inspector.
+6. Modify the Behavior Parameters of the Agent :
   * `Behavior Name` to *RollerBallBrain*
   * `Vector Observation` `Space Size` = 8
   * `Vector Action` `Space Type` = **Continuous**
