@@ -112,7 +112,7 @@ public class AgentSoccer : Agent
     public override void AgentAction(float[] vectorAction)
     {
         // Existential penalty for strikers.
-        AddReward(-1f / 3000f);
+        //AddReward(-1f / 3000f);
         MoveAgent(vectorAction);
     }
 
