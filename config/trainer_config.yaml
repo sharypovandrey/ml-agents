@@ -42,7 +42,7 @@ PushBlock:
     buffer_size: 2048
     beta: 1.0e-2
     hidden_units: 256
-    summary_freq: 60000
+    summary_freq: 50 # 60000
     time_horizon: 64
     num_layers: 2
 

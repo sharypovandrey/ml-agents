@@ -1,8 +1,10 @@
 //Put this script on your blue cube.
 
 using System.Collections;
+using System;
 using UnityEngine;
 using MLAgents;
+using Random=UnityEngine.Random;
 
 public class PushAgentBasic : Agent
 {
@@ -35,7 +37,7 @@ public class PushAgentBasic : Agent
     /// Detects when the block touches the goal.
     /// </summary>
     [HideInInspector]
-    public GoalDetect goalDetect;
+    // public GoalDetect goalDetect;
 
     public bool useVectorObs;
 
@@ -48,20 +50,25 @@ public class PushAgentBasic : Agent
     /// </summary>
     Renderer m_GroundRenderer;
 
+    private float area_size_x; 
+    private float area_size_z; 
+
     void Awake()
     {
         m_PushBlockSettings = FindObjectOfType<PushBlockSettings>();
+        Monitor.SetActive(true);
     }
 
     public override void InitializeAgent()
     {
         base.InitializeAgent();
-        goalDetect = block.GetComponent<GoalDetect>();
-        goalDetect.agent = this;
+        // goalDetect = block.GetComponent<GoalDetect>();
+        // goalDetect.agent = this;
 
         // Cache the agent rigidbody
         m_AgentRb = GetComponent<Rigidbody>();
         // Cache the block rigidbody
+        m_BlockRb = block.GetComponent<Rigidbody>();
         m_BlockRb = block.GetComponent<Rigidbody>();
         // Get the ground's bounds
         areaBounds = ground.GetComponent<Collider>().bounds;
@@ -69,8 +76,37 @@ public class PushAgentBasic : Agent
         m_GroundRenderer = ground.GetComponent<Renderer>();
         // Starting material
         m_GroundMaterial = m_GroundRenderer.material;
-
+        
+        area_size_x = areaBounds.size.x;
+        area_size_z = areaBounds.size.z;
+        
         SetResetParameters();
+    }
+
+    public override void CollectObservations()
+    {
+        float g_x = Normalize( areaBounds.center.x - goal.GetComponent<Collider>().bounds.center.x, 0, area_size_x / 2); 
+        float g_z = Normalize( areaBounds.center.z - goal.GetComponent<Collider>().bounds.center.z, 0, area_size_z / 2);
+        float a_x = Normalize( areaBounds.center.x - this.GetComponent<Collider>().bounds.center.x, 0, area_size_x / 2); 
+        float a_z = Normalize( areaBounds.center.z - this.GetComponent<Collider>().bounds.center.z, 0, area_size_z / 2);
+        float d_x = Math.Abs(g_x - a_x);
+        float d_z = Math.Abs(g_z - a_z);
+
+        AddVectorObs(g_x);
+        AddVectorObs(g_z);
+        AddVectorObs(a_x);
+        AddVectorObs(a_z);
+        AddVectorObs(d_x);
+        AddVectorObs(d_z);
+
+        Debug.Log(string.Format("goal x: {0} z: {1}, agent x: {2}, z: {3}, distance x: {4}, z: {5}",
+        g_x, 
+        g_z,
+        a_x, 
+        a_z,
+        d_x,
+        d_z ));
+
     }
 
     /// <summary>
@@ -206,6 +242,12 @@ public class PushAgentBasic : Agent
         m_BlockRb.angularVelocity = Vector3.zero;
     }
 
+    void ResetGoal()
+    {
+        // Get a random position for the block.
+        goal.transform.position = GetRandomSpawnPos();
+    }
+
     /// <summary>
     /// In the editor, if "Reset On Done" is checked then AgentReset() will be
     /// called automatically anytime we mark done = true in an agent script.
@@ -217,6 +259,7 @@ public class PushAgentBasic : Agent
         area.transform.Rotate(new Vector3(0f, rotationAngle, 0f));
 
         ResetBlock();
+        ResetGoal();
         transform.position = GetRandomSpawnPos();
         m_AgentRb.velocity = Vector3.zero;
         m_AgentRb.angularVelocity = Vector3.zero;
@@ -251,4 +294,24 @@ public class PushAgentBasic : Agent
         SetGroundMaterialFriction();
         SetBlockProperties();
     }
+
+    void OnCollisionEnter(Collision col)
+    {
+        // Touched goal.
+        if (col.gameObject.CompareTag("goal"))
+        {
+            ScoredAGoal();
+        } else if (col.gameObject.CompareTag("block") || col.gameObject.CompareTag("wall"))
+        {
+            AddReward(-1f);
+            Debug.Log("NEGATIVE REWARD!!!");
+        }
+    }
+
+    float Normalize(float current, float min, float max)
+    {
+        return (current - min) / (max - min);
+    }
+
+
 }
