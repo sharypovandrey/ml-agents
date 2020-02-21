@@ -36,8 +36,6 @@ public class PushAgentBasic : Agent
     /// <summary>
     /// Detects when the block touches the goal.
     /// </summary>
-    [HideInInspector]
-    // public GoalDetect goalDetect;
 
     public bool useVectorObs;
 
@@ -62,8 +60,6 @@ public class PushAgentBasic : Agent
     public override void InitializeAgent()
     {
         base.InitializeAgent();
-        // goalDetect = block.GetComponent<GoalDetect>();
-        // goalDetect.agent = this;
 
         // Cache the agent rigidbody
         m_AgentRb = GetComponent<Rigidbody>();
