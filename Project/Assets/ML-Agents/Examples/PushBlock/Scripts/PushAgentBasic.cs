@@ -32,6 +32,7 @@ public class PushAgentBasic : Agent
     /// The block to be pushed to the goal.
     /// </summary>
     public GameObject block;
+    public GameObject block_1;
 
     /// <summary>
     /// Detects when the block touches the goal.
@@ -65,7 +66,6 @@ public class PushAgentBasic : Agent
         m_AgentRb = GetComponent<Rigidbody>();
         // Cache the block rigidbody
         m_BlockRb = block.GetComponent<Rigidbody>();
-        m_BlockRb = block.GetComponent<Rigidbody>();
         // Get the ground's bounds
         areaBounds = ground.GetComponent<Collider>().bounds;
         // Get the ground renderer so we can change the material when a goal is scored
@@ -81,28 +81,25 @@ public class PushAgentBasic : Agent
 
     public override void CollectObservations()
     {
-        float g_x = Normalize( areaBounds.center.x - goal.GetComponent<Collider>().bounds.center.x, 0, area_size_x / 2); 
-        float g_z = Normalize( areaBounds.center.z - goal.GetComponent<Collider>().bounds.center.z, 0, area_size_z / 2);
-        float a_x = Normalize( areaBounds.center.x - this.GetComponent<Collider>().bounds.center.x, 0, area_size_x / 2); 
-        float a_z = Normalize( areaBounds.center.z - this.GetComponent<Collider>().bounds.center.z, 0, area_size_z / 2);
-        float d_x = Math.Abs(g_x - a_x);
-        float d_z = Math.Abs(g_z - a_z);
+        // float g_x = Normalize( areaBounds.center.x - goal.GetComponent<Collider>().bounds.center.x, 0, area_size_x / 2); 
+        // float g_z = Normalize( areaBounds.center.z - goal.GetComponent<Collider>().bounds.center.z, 0, area_size_z / 2);
+        // float a_x = Normalize( areaBounds.center.x - this.GetComponent<Collider>().bounds.center.x, 0, area_size_x / 2); 
+        // float a_z = Normalize( areaBounds.center.z - this.GetComponent<Collider>().bounds.center.z, 0, area_size_z / 2);
+        float g_x = goal.GetComponent<Collider>().bounds.center.x; 
+        float g_z = goal.GetComponent<Collider>().bounds.center.z;
+        float a_x = this.GetComponent<Collider>().bounds.center.x; 
+        float a_z = this.GetComponent<Collider>().bounds.center.z;        
+        float d_x = g_x - a_x;
+        float d_z = g_z - a_z;
 
-        AddVectorObs(g_x);
-        AddVectorObs(g_z);
-        AddVectorObs(a_x);
-        AddVectorObs(a_z);
+        // AddVectorObs(g_x);
+        // AddVectorObs(g_z);
+        // AddVectorObs(a_x);
+        // AddVectorObs(a_z);
         AddVectorObs(d_x);
         AddVectorObs(d_z);
 
-        Debug.Log(string.Format("goal x: {0} z: {1}, agent x: {2}, z: {3}, distance x: {4}, z: {5}",
-        g_x, 
-        g_z,
-        a_x, 
-        a_z,
-        d_x,
-        d_z ));
-
+        // Debug.Log(string.Format("goal x: {0} z: {1}, agent x: {2}, z: {3}, distance x: {4}, z: {5}", g_x, g_z, a_x, a_z, d_x, d_z));
     }
 
     /// <summary>
@@ -126,6 +123,32 @@ public class PushAgentBasic : Agent
             }
         }
         return randomSpawnPos;
+    }
+
+    public Vector3 GetRandomSpawnPosForObj(GameObject obj)
+    {
+        Vector3 p = GetRandomSpawnPos();
+
+        bool canReturn = true;
+
+        foreach (Transform child in area.transform)
+        {
+            if (child.tag == "block")
+            {
+                GameObject b = child.gameObject;
+                float x_diff = Math.Abs(b.GetComponent<Collider>().bounds.center.x - obj.GetComponent<Collider>().bounds.center.x);
+                float z_diff = Math.Abs(b.GetComponent<Collider>().bounds.center.z - obj.GetComponent<Collider>().bounds.center.z);
+                Debug.Log(string.Format("dist {0} {1}", x_diff, z_diff ));
+                if (x_diff < 2f || z_diff < 2f)
+                    canReturn = false;
+            }
+        }
+
+        if (canReturn)
+            return p;
+        // Debug.Log("good pos");
+        // return p;
+        return GetRandomSpawnPosForObj(obj); //Recursive call   
     }
 
     /// <summary>
@@ -238,9 +261,19 @@ public class PushAgentBasic : Agent
         m_BlockRb.angularVelocity = Vector3.zero;
     }
 
+    void AppendBlocks()
+    {
+        // for (int i = 0; i < 3; i++)
+        // {
+        //     block_1 = Instantiate(block, block.transform.position, block.transform.rotation, area.transform);
+        //     block_1.transform.position = GetRandomSpawnPos();
+        // }
+    }
+
     void ResetGoal()
     {
         // Get a random position for the block.
+        // goal.transform.position = GetRandomSpawnPosForObj(goal);
         goal.transform.position = GetRandomSpawnPos();
     }
 
@@ -255,7 +288,9 @@ public class PushAgentBasic : Agent
         area.transform.Rotate(new Vector3(0f, rotationAngle, 0f));
 
         ResetBlock();
+        // AppendBlocks();
         ResetGoal();
+        // transform.position = GetRandomSpawnPosForObj(this.gameObject);
         transform.position = GetRandomSpawnPos();
         m_AgentRb.velocity = Vector3.zero;
         m_AgentRb.angularVelocity = Vector3.zero;
@@ -299,7 +334,7 @@ public class PushAgentBasic : Agent
             ScoredAGoal();
         } else if (col.gameObject.CompareTag("block") || col.gameObject.CompareTag("wall"))
         {
-            AddReward(-1f);
+            AddReward(-2.5f);
             Debug.Log("NEGATIVE REWARD!!!");
         }
     }
