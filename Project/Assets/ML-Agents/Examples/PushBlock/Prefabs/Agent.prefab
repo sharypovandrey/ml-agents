@@ -263,7 +263,6 @@ MonoBehaviour:
     m_Extent: {x: 0, y: 0, z: 0}
   goal: {fileID: 0}
   block: {fileID: 0}
-  block_1: {fileID: 0}
   useVectorObs: 1
 --- !u!65 &5169592450903135972
 BoxCollider:
@@ -294,9 +293,9 @@ MonoBehaviour:
   detectableTags:
   - block
   - wall
-  raysPerDirection: 3
-  maxRayDegrees: 90
-  sphereCastRadius: 0.5
+  raysPerDirection: 50
+  maxRayDegrees: 180
+  sphereCastRadius: 0.1
   rayLength: 12
   rayLayerMask:
     serializedVersion: 2
